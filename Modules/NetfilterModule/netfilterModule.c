@@ -23,6 +23,10 @@ MODULE_LICENSE("GPL");				// Set the license
 MODULE_AUTHOR("Eryk Szlachetka, Pamela Sabio"); // Set the Authors
 MODULE_DESCRIPTION("Desc goes here");		// Set the description
 
+unsigned int port_str_to_int(char *);
+unsigned int ip_str_to_hl(char *);
+void drop_all_packets(void);
+
 /* Firewall policy struct */
 struct mf_rule_desp {
 	unsigned char in_out;
@@ -222,8 +226,9 @@ unsigned int hook_func_out(void *priv, struct sk_buff *skb, const struct nf_hook
 	unsigned int destination_ip;
 	unsigned int source_ip;
 	unsigned int destination_port, source_port = 0;
-	unsigned char *user_data;
-	
+	//unsigned char *user_data;
+	int i = 0;
+
 	// TODO: REMOVE THIS LINE OF CODE
 	//return NF_ACCEPT;
 
@@ -257,7 +262,6 @@ unsigned int hook_func_out(void *priv, struct sk_buff *skb, const struct nf_hook
 		destination_port = (unsigned int)ntohs(tcp_header_out ->dest);
         }
 
-	int i = 0;
 	list_for_each(lh,&policy_list.list){
 		i++;
 		rule = list_entry(lh, struct mf_rule, list);
