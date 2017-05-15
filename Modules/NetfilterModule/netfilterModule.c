@@ -4,6 +4,9 @@
 #define PROTOCOL_HTTPS 443
 #define ONE 1
 #define ZERO 0
+#define HTTP 3
+#define HTTPS 4
+#define SMTP 5
 
 #include <linux/module.h>
 #include <linux/kernel.h>
@@ -325,8 +328,8 @@ void drop_all_packets(void){
 	rule_block_all_incoming.dest_ip = NULL;
 	rule_block_all_incoming.dest_netmask = NULL;
 	rule_block_all_incoming.dest_port = NULL;
-	rule_block_all_incoming.proto = 0;  // ALL PROTOCOLS
-	rule_block_all_incoming.action = 0; // BLOCK ACTION (DROP)
+	rule_block_all_incoming.proto = 1;  // ALL PROTOCOLS
+	rule_block_all_incoming.action = 1; // BLOCK ACTION (DROP)
 	add_rule(&rule_block_all_incoming);
 
 	printk(KERN_INFO "Blocking outgoing connections for all protocols.\n");
@@ -339,10 +342,38 @@ void drop_all_packets(void){
 	rule_block_all_outgoing.dest_ip = NULL;
 	rule_block_all_outgoing.dest_netmask = NULL;
 	rule_block_all_outgoing.dest_port = NULL;
-	rule_block_all_outgoing.proto = 0;  // 0 all, 1 tcp, 2 udp
-	rule_block_all_outgoing.action = 0; // 0 for block, 1 for unblock
+	rule_block_all_outgoing.proto = 1;  // 0 all, 1 tcp, 2 udp
+	rule_block_all_outgoing.action = 1; // 0 for block, 1 for unblock
 	add_rule(&rule_block_all_outgoing);
-	
+
+	printk(KERN_INFO "Unblocking incoming connections for http protocols.\n");
+        rule_block_all_outgoing.in_out = 1; // 0 = neither in or out, 1 = in, 2$
+        rule_block_all_outgoing.src_ip = (char *)kmalloc(16, GFP_KERNEL);
+        strcpy(rule_block_all_outgoing.src_ip, "10.0.2.15"); // TODO: CHANGE TH$
+        rule_block_all_outgoing.src_netmask = (char *)kmalloc(16, GFP_KERNEL);
+        strcpy(rule_block_all_outgoing.src_netmask, "255.255.255.255");
+        rule_block_all_outgoing.src_port = NULL;
+        rule_block_all_outgoing.dest_ip = NULL;
+        rule_block_all_outgoing.dest_netmask = NULL;
+        rule_block_all_outgoing.dest_port = NULL;
+        rule_block_all_outgoing.proto = HTTP;  // 0 all, 1 tcp, 2 udp
+        rule_block_all_outgoing.action = 1; // 0 for block, 1 for unblock
+        add_rule(&rule_block_all_outgoing);
+
+	printk(KERN_INFO "Unblocking outgoing connections for http protocols.\n");
+        rule_block_all_outgoing.in_out = 2; // 0 = neither in or out, 1 = in, 2$
+        rule_block_all_outgoing.src_ip = (char *)kmalloc(16, GFP_KERNEL);
+        strcpy(rule_block_all_outgoing.src_ip, "10.0.2.15"); // TODO: CHANGE TH$
+        rule_block_all_outgoing.src_netmask = (char *)kmalloc(16, GFP_KERNEL);
+        strcpy(rule_block_all_outgoing.src_netmask, "255.255.255.255");
+        rule_block_all_outgoing.src_port = NULL;
+        rule_block_all_outgoing.dest_ip = NULL;
+        rule_block_all_outgoing.dest_netmask = NULL;
+        rule_block_all_outgoing.dest_port = NULL;
+        rule_block_all_outgoing.proto = HTTP;  // 0 all, 1 tcp, 2 udp
+        rule_block_all_outgoing.action = 1; // 0 for block, 1 for unblock
+        add_rule(&rule_block_all_outgoing);
+
 }
 
 //Called when module loaded using 'insmod'
