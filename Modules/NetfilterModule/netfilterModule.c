@@ -388,7 +388,7 @@ void drop_all_packets(void){
         rule_block_all_outgoing.action = 1; // 0 for block, 1 for unblock
         add_rule(&rule_block_all_outgoing);
 
-	printk(KERN_INFO "Unblocking incoming connection for https protocols.\n");
+	printk(KERN_INFO "Unblocking outgoing connection for https protocols.\n");
         rule_block_all_outgoing.in_out = 2; // 0 = neither in or out, 1 = in, 2$
         rule_block_all_outgoing.src_ip = (char *)kmalloc(16, GFP_KERNEL);
         strcpy(rule_block_all_outgoing.src_ip, "10.0.2.15"); // TODO: CHANGE TH$
@@ -399,6 +399,34 @@ void drop_all_packets(void){
         rule_block_all_outgoing.dest_netmask = NULL;
         rule_block_all_outgoing.dest_port = NULL;
         rule_block_all_outgoing.proto = HTTPS;  // 0 all, 1 tcp, 2 udp
+        rule_block_all_outgoing.action = 1; // 0 for block, 1 for unblock
+        add_rule(&rule_block_all_outgoing);
+
+	printk(KERN_INFO "Unblocking incoming connection for smtp protocols.\n");
+        rule_block_all_outgoing.in_out = 1; // 0 = neither in or out, 1 = in, 2$
+        rule_block_all_outgoing.src_ip = (char *)kmalloc(16, GFP_KERNEL);
+        strcpy(rule_block_all_outgoing.src_ip, "10.0.2.15"); // TODO: CHANGE TH$
+        rule_block_all_outgoing.src_netmask = (char *)kmalloc(16, GFP_KERNEL);
+        strcpy(rule_block_all_outgoing.src_netmask, "255.255.255.255");
+        rule_block_all_outgoing.src_port = NULL;
+        rule_block_all_outgoing.dest_ip = NULL;
+        rule_block_all_outgoing.dest_netmask = NULL;
+        rule_block_all_outgoing.dest_port = NULL;
+        rule_block_all_outgoing.proto = SMTP;  // 0 all, 1 tcp, 2 udp
+        rule_block_all_outgoing.action = 1; // 0 for block, 1 for unblock
+        add_rule(&rule_block_all_outgoing);
+
+	printk(KERN_INFO "Unblocking outgoing connection for https protocols.\n");
+        rule_block_all_outgoing.in_out = 2; // 0 = neither in or out, 1 = in, 2$
+        rule_block_all_outgoing.src_ip = (char *)kmalloc(16, GFP_KERNEL);
+        strcpy(rule_block_all_outgoing.src_ip, "10.0.2.15"); // TODO: CHANGE TH$
+        rule_block_all_outgoing.src_netmask = (char *)kmalloc(16, GFP_KERNEL);
+        strcpy(rule_block_all_outgoing.src_netmask, "255.255.255.255");
+        rule_block_all_outgoing.src_port = NULL;
+        rule_block_all_outgoing.dest_ip = NULL;
+        rule_block_all_outgoing.dest_netmask = NULL;
+        rule_block_all_outgoing.dest_port = NULL;
+        rule_block_all_outgoing.proto = SMTP;  // 0 all, 1 tcp, 2 udp
         rule_block_all_outgoing.action = 1; // 0 for block, 1 for unblock
         add_rule(&rule_block_all_outgoing);
 
