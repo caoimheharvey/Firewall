@@ -2,6 +2,10 @@
 #Script to set up ip tables rules.
 #Eryk Szlachetka & Caoimhe Harvey 18/04/17 
 
+#Accepting loopback
+iptables -A INPUT -i lo -j ACCEPT
+iptables -A OUPUT -o lo -j ACCEPT
+
 echo Setting SSH INPUT..
 #Allow established input SSH connection
 iptables -A INPUT -p tcp --dport 22 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
@@ -16,7 +20,10 @@ iptables -A INPUT -p tcp -m multiport --dports 80,433 -m conntrack --ctstate NEW
 
 echo Setting HTTP/S OUTPUT..
 #Allow ESTABLISHED,RELATED http and https input connections
-iptables -A OUTPUT -p tcp -m multiport --sports 80,433 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+iptables -A OUTPUT -p tcp -m multiport --dports 80,433 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+
+#blocking yahoo
+iptables -A OUTPUT -p tcp -d 209.191.88.254 --dport 443 -j REJECT
 
 echo Setting UDP/TCP OUTPUT..
 #Allow NEW udp/tcp output connections
@@ -58,4 +65,4 @@ echo New Rules:
 iptables -L
 
 #Flushing the rules for testing purposes
-iptables -F
+#iptables -F
