@@ -1,6 +1,6 @@
 #!/bin/bash
 #Script to set up ip tables rules.
-#Eryk Szlachetka & Caoimhe Harvey 18/04/17 
+#Eryk Szlachetka, Pamela Sabio & Caoimhe Harvey 18/04/17 
 
 echo Setting SSH INPUT..
 #Allow established input SSH connection
@@ -13,10 +13,12 @@ iptables -A OUTPUT -p tcp -m tcp  --sport 22 -m conntrack --ctstate ESTABLISHED 
 echo Setting HTTP/S INPUT..
 #Allow NEW,ESTABLISHED,RELATED http and https output connections
 iptables -A INPUT -p tcp -m multiport --dports 80,433 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+iptables -A OUTPUT -p tcp -m multiport --sports 80,433 -m conntrack --ctstate ESTABLISHED -j ACCEPT
 
 echo Setting HTTP/S OUTPUT..
 #Allow ESTABLISHED,RELATED http and https input connections
-iptables -A OUTPUT -p tcp -m multiport --sports 80,433 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+iptables -A OUTPUT -p tcp -m multiport --sports 80,433 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+iptables -A INPUT -p tcp -m multiport --sports 80,433 -m conntrack --ctstate ESTABLISHED -j ACCEPT
 
 echo Setting UDP/TCP OUTPUT..
 #Allow NEW udp/tcp output connections
@@ -38,8 +40,8 @@ iptables -A OUTPUT -p tcp -m tcp --sport 25 -m conntrack --ctstate ESTABLISHED -
 
 echo Setting Forwarding..
 #setting IP Forwarding for internal network
-iptables -A FORWARD -i eth1 -j ACCEPT
-iptables -A FORWARD -o eth1 -j ACCEPT
+iptables -A FORWARD -i eth0 -j ACCEPT
+iptables -A FORWARD -o eth0 -j ACCEPT
 
 #enabling forwarding on this machine
 echo Enabling Forwarding on this machine..
