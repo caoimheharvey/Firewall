@@ -32,8 +32,7 @@ unsigned int ip_str_to_hl(char *ip_str);
 /* Firewall policy struct */
 struct mf_rule_desp {
 	unsigned char in_out;
-    	char *src_ip, *src_netmask, *dest_ip, *dest_netmask;//, *destination_port, *source_port;
-	unsigned int destination_port, source_port;
+    	char *src_ip, *src_netmask, *source_port, *dest_ip, *dest_netmask, *destination_port;
 	unsigned char proto;
 	unsigned char action;
 };
@@ -168,18 +167,10 @@ unsigned int hook_func_out(void *priv, struct sk_buff *skb, const struct nf_hook
 		//tcp_header_out = 
               	source_port = (unsigned int)ntohs(tcp_header_out->source);
 		destination_port = (unsigned int)ntohs(tcp_header_out ->dest);
-        }else{
-		return NF_STOLEN;
-	}
+        }
 
-	/*printk(KERN_INFO "OUT / DEST IP: %u Ip_str: %u", destination_ip, ip_str_to_hl("223.202.132.112"));
-	if(destination_ip == 2551672010 || source_ip == 2551672010){
-		printk(KERN_INFO "Test Blocked BLOCKED!");
-		return NF_STOLEN;
-	}*/
-	// bing = 847278282
-	//for(lh = &policy_list.list; lh != &(policy_list.list); lh = lh->next){
 	list_for_each(lh,&policy_list.list){
+		//printk(KERN_INFO "List For Each / IN");
 		i++;
 		rule = list_entry(lh, struct mf_rule, list);
 		// Check if we are not working with "in" packet
@@ -192,31 +183,33 @@ unsigned int hook_func_out(void *priv, struct sk_buff *skb, const struct nf_hook
 				printk(KERN_INFO "Skipping TCP / OUT");
 				continue;
 			}
-			printk(KERN_INFO "After TCP/UDPs Dest_Rule: %u Dest: %u / OUT", ((unsigned int)rule->destination_port), ((unsigned int)destination_port));
+			printk(KERN_INFO "After TCP/UDPs Source: %u Dest: %u / OUT", ((unsigned int)rule->source_port), ((unsigned int)rule->destination_port);
 
 
-			//|| (source_port !=  ((unsigned int)rule->source_port))
-			/*if ((destination_port != ((unsigned int)rule->destination_port))) {
-				printk(KERN_INFO "Comparing ports / OUT");
-				continue;
 
-			}*/
-			if( (destination_port == ((unsigned int)rule->destination_port)) || (source_port == ((unsigned int)rule->destination_port)) ){
-				printk(KERN_INFO "After comparing the ports / OUT");
-
-				//a match is found: take action
-				if (rule->action == 0) {
-					printk(KERN_INFO "DROPPING PACKET OUT!");
-					return NF_STOLEN;
-				} else {
-					printk(KERN_INFO "ALLOWING PACKET OUT!");
-					return NF_ACCEPT;
-				}
-			}else{
-				continue;
+			//check the port number
+			if(((unsigned int)ntohs(rule->source_port)) == 0){
+				//rule doesn't specify src port: match
+			}else if (source_port != ((unsigned int)ntohs(rule->source_port))) {
+				//continue;
 			}
+			if (((unsigned int)ntohs(rule->destination_port)) == 0) {
+				//rule doens't specify dest port: match
+			}
+			else if (destination_port != ((unsigned int)ntohs(rule->destination_port))) {
+				//continue;
+			}
+
+			//a match is found: take action
+			if (rule->action == 0) {
+				printk(KERN_INFO "DROPPING PACKET IN!");
+				return NF_STOLEN;
+			} else {
+				printk(KERN_INFO "ALLOWING PACKET IN!");
+				return NF_ACCEPT;
+			}
+			
 		}
-		continue;
 	}
 
 
@@ -263,17 +256,8 @@ unsigned int hook_func_in(void *priv, struct sk_buff *skb, const struct nf_hook_
 		// Assign ports
 		source_port = (unsigned int)ntohs(tcp_header->source);
 		destination_port = (unsigned int)ntohs(tcp_header->dest);
-	}else{
-		return NF_STOLEN;
 	}
-	/*
-	printk(KERN_INFO "IN / DEST IP: %u Ip_str: %u", destination_ip, ip_str_to_hl("223.202.132.112"));
-	if(destination_ip == 2551672010 || source_ip == 2551672010){
-		printk(KERN_INFO "Test BLOCKED!");
-		return NF_STOLEN;
-	}*/
-	//chinesetest.cn = 223.202.132.112
-	//for(lh = &policy_list.list; lh != &(policy_list.list); lh = lh->next){
+
 	list_for_each(lh,&policy_list.list){
 		printk(KERN_INFO "List For Each / IN");
 		i++;
@@ -285,48 +269,40 @@ unsigned int hook_func_in(void *priv, struct sk_buff *skb, const struct nf_hook_
 			printk(KERN_INFO "In Packet / IN");
 			// Compare rule and the ip_header
 			if(((rule -> proto == ONE) && ((ip_header->protocol != PROTOCOL_TCP) && (ip_header->protocol != PROTOCOL_UDP)))){
-				printk(KERN_INFO "Skipping TCP/UDP / IN");
+				printk(KERN_INFO "Skipping TCP / IN");
 				continue;
 			}
 
-			printk(KERN_INFO "After TCP/UDPs Dest_Rule: %u Source: %u Dest: %u/ IN", ((unsigned int)rule->destination_port), ((unsigned int)source_port), ((unsigned int)destination_port));
+			printk(KERN_INFO "After TCP/UDPs Source: %u Dest: %u / IN", ((unsigned int)rule->source_port), ((unsigned int)rule->destination_port);
 			//check the port number
-			/*if(((unsigned int)ntohs(rule->source_port)) == 0){
+			if(((unsigned int)ntohs(rule->source_port)) == 0){
 				//rule doesn't specify src port: match
 			}else if (source_port != ((unsigned int)ntohs(rule->source_port))) {
-				//continue;
-			}*/
-
-			/*if (((unsigned int)ntohs(rule->destination_port)) == 0) {
-				//rule doens't specify dest port: match
-			}*/
-			//|| (source_port !=  ((unsigned int)rule->source_port)
-			/*if ((destination_port != ((unsigned int)rule->destination_port))) {
 				continue;
-				
-			}*/
-			
-			if( (destination_port == ((unsigned int)rule->destination_port)) || (source_port == ((unsigned int)rule->destination_port))){
-				//a match is found: take action
-				if (rule->action == 0) {
-					printk(KERN_INFO "DROPPING PACKET IN!");
-					return NF_STOLEN;
-				} else {
-					printk(KERN_INFO "ALLOWING PACKET IN!");
-					return NF_ACCEPT;
-				}
-			}else{	
+			}
+			if (((unsigned int)ntohs(rule->destination_port)) == 0) {
+				//rule doens't specify dest port: match
+			}
+			else if (destination_port != ((unsigned int)ntohs(rule->destination_port))) {
+				continue;
+			}
+
+			//a match is found: take action
+			if (rule->action == 0) {
+				printk(KERN_INFO "DROPPING PACKET IN!");
+				return NF_STOLEN;
+			} else {
+				printk(KERN_INFO "ALLOWING PACKET IN!");
 				return NF_ACCEPT;
 			}
 		}
-		continue;
 	}
 	printk(KERN_INFO "Returning STOLEN %d / IN", ip_header->protocol);
 	return NF_STOLEN;
 
 }
 
-void add_rule(struct mf_rule_desp * rule_desp_struct, int n){
+void add_rule(struct mf_rule_desp * rule_desp_struct){
 	struct mf_rule *rule;
 	rule = kmalloc(sizeof(*rule), GFP_KERNEL);
 
@@ -339,16 +315,14 @@ void add_rule(struct mf_rule_desp * rule_desp_struct, int n){
 	rule->in_out = rule_desp_struct->in_out;
 	rule->src_ip = ip_str_to_hl(rule_desp_struct->src_ip);
 	rule->src_netmask = ip_str_to_hl(rule_desp_struct->src_netmask);
-	//rule->source_port = port_str_to_int(rule_desp_struct->source_port);
-	rule->source_port = rule_desp_struct->source_port;
+	rule->source_port = port_str_to_int(rule_desp_struct->source_port);
 	rule->dest_ip = ip_str_to_hl(rule_desp_struct->dest_ip);
 	rule->dest_netmask = ip_str_to_hl(rule_desp_struct->dest_netmask);
-	//rule->destination_port = port_str_to_int(rule_desp_struct->destination_port);
-	rule->destination_port = rule_desp_struct->destination_port;
+	rule->destination_port = port_str_to_int(rule_desp_struct->destination_port);
 	rule->proto = rule_desp_struct->proto;
 	rule->action = rule_desp_struct->action;
 	printk(KERN_INFO "Finished adding.\n");
-	
+
 	INIT_LIST_HEAD(&(rule->list));
 	list_add_tail(&(rule->list), &(policy_list.list));
 }
@@ -359,25 +333,22 @@ void drop_all_packets(void){
 	struct mf_rule_desp rule_allow_http_incoming, rule_allow_http_outgoing;
 	struct mf_rule_desp rule_allow_https_incoming, rule_allow_https_outgoing;
 	struct mf_rule_desp rule_allow_dns_in, rule_allow_dns_out;
-	struct mf_rule_desp rule_allow_ipc_in, rule_allow_ipc_out;
 	
 	printk(KERN_INFO "\n\nSetting the rules.\n\n");
-
 	printk(KERN_INFO "Allowing SSH INPUT.\n");
 	rule_allow_tcp_ssh_incoming.in_out = 1; // 0 = neither in or out, 1 = in, 2 = out
 	rule_allow_tcp_ssh_incoming.src_ip = (char *)kmalloc(16, GFP_KERNEL);
 	strcpy(rule_allow_tcp_ssh_incoming.src_ip, "10.0.2.15"); // TODO: CHANGE THE IP
 	rule_allow_tcp_ssh_incoming.src_netmask = (char *)kmalloc(16, GFP_KERNEL);
 	strcpy(rule_allow_tcp_ssh_incoming.src_netmask, "255.255.255.255");
-	rule_allow_tcp_ssh_incoming.source_port = 0;
+	rule_allow_tcp_ssh_incoming.source_port = NULL;
 	rule_allow_tcp_ssh_incoming.dest_ip = NULL;
 	rule_allow_tcp_ssh_incoming.dest_netmask = NULL;
-	//rule_allow_tcp_ssh_incoming.destination_port = (char *)kmalloc(16, GFP_KERNEL);
-	//strcpy(rule_allow_tcp_ssh_incoming.destination_port, "22");
-	rule_allow_tcp_ssh_incoming.destination_port = 22;
+	rule_allow_tcp_ssh_incoming.destination_port = (char *)kmalloc(16, GFP_KERNEL);
+	strcpy(rule_allow_tcp_ssh_incoming.destination_port, "22");
 	rule_allow_tcp_ssh_incoming.proto = 1;  // TCP
 	rule_allow_tcp_ssh_incoming.action = 1; // BLOCK ACTION (DROP)
-	add_rule(&rule_allow_tcp_ssh_incoming, 0);
+	add_rule(&rule_allow_tcp_ssh_incoming);
 
 	printk(KERN_INFO "Allowing SSH OUTPUT\n");
 	rule_allow_tcp_ssh_outgoing.in_out = 2; // 0 = neither in or out, 1 = in, 2 = out
@@ -385,15 +356,14 @@ void drop_all_packets(void){
 	strcpy(rule_allow_tcp_ssh_outgoing.src_ip, "10.0.2.15"); // TODO: CHANGE THE IP
 	rule_allow_tcp_ssh_outgoing.src_netmask = (char *)kmalloc(16, GFP_KERNEL);
 	strcpy(rule_allow_tcp_ssh_outgoing.src_netmask, "255.255.255.255");
-	//rule_allow_tcp_ssh_outgoing.source_port = (char *)kmalloc(16, GFP_KERNEL);
-	//strcpy(rule_allow_tcp_ssh_outgoing.source_port, "22");
-	rule_allow_tcp_ssh_outgoing.source_port = 0;
+	rule_allow_tcp_ssh_outgoing.source_port = (char *)kmalloc(16, GFP_KERNEL);
+	strcpy(rule_allow_tcp_ssh_outgoing.source_port, "22");
 	rule_allow_tcp_ssh_outgoing.dest_ip = NULL;
 	rule_allow_tcp_ssh_outgoing.dest_netmask = NULL;
-	rule_allow_tcp_ssh_outgoing.destination_port = 22;
+	rule_allow_tcp_ssh_outgoing.destination_port = NULL;
 	rule_allow_tcp_ssh_outgoing.proto = 1;  // 0 all, 1 tcp, 2 udp
 	rule_allow_tcp_ssh_outgoing.action = 1; // 0 for block, 1 for unblock
-	add_rule(&rule_allow_tcp_ssh_outgoing,1);
+	add_rule(&rule_allow_tcp_ssh_outgoing);
 	
 	printk(KERN_INFO "Allowing HTTP INPUT\n");
 	rule_allow_http_incoming.in_out = 1;
@@ -401,31 +371,29 @@ void drop_all_packets(void){
 	strcpy(rule_allow_http_incoming.src_ip, "10.0.2.15");
 	rule_allow_http_incoming.src_netmask = (char *)kmalloc(16,GFP_KERNEL);
 	strcpy(rule_allow_http_incoming.src_netmask, "255.255.255.255");
-	rule_allow_http_incoming.source_port = 0;
+	rule_allow_http_incoming.source_port = NULL;
 	rule_allow_http_incoming.dest_ip = NULL;
 	rule_allow_http_incoming.dest_netmask = NULL;
-	//rule_allow_http_incoming.destination_port = (char *)kmalloc(16,GFP_KERNEL);
-	//strcpy(rule_allow_http_incoming.destination_port, "80");
-	rule_allow_http_incoming.destination_port = 80;
+	rule_allow_http_incoming.destination_port = (char *)kmalloc(16,GFP_KERNEL);
+	strcpy(rule_allow_http_incoming.destination_port, "80");
 	rule_allow_http_incoming.proto = 1;
 	rule_allow_http_incoming.action = 1;
-	add_rule(&rule_allow_http_incoming,2);
+	add_rule(&rule_allow_http_incoming);
 
 	printk(KERN_INFO "Allowing HTTP OUTPUT\n");
-	rule_allow_http_outgoing.in_out = 2;
+	rule_allow_http_outgoing.in_out = 1;
 	rule_allow_http_outgoing.src_ip = (char *)kmalloc(16, GFP_KERNEL);
 	strcpy(rule_allow_http_outgoing.src_ip, "10.0.2.15");
 	rule_allow_http_outgoing.src_netmask = (char *)kmalloc(16,GFP_KERNEL);
 	strcpy(rule_allow_http_outgoing.src_netmask, "255.255.255.255");
-	//rule_allow_http_outgoing.source_port = (char *)kmalloc(16,GFP_KERNEL);
-	//strcpy(rule_allow_http_outgoing.source_port, "80");
-	rule_allow_http_outgoing.source_port = 0;
+	rule_allow_http_outgoing.source_port = (char *)kmalloc(16,GFP_KERNEL);
+	strcpy(rule_allow_http_outgoing.source_port, "80");
 	rule_allow_http_outgoing.dest_ip = NULL;
 	rule_allow_http_outgoing.dest_netmask = NULL;
-	rule_allow_http_outgoing.destination_port = 80;
+	rule_allow_http_outgoing.destination_port = NULL;
 	rule_allow_http_outgoing.proto = 1;
 	rule_allow_http_outgoing.action = 1;
-	add_rule(&rule_allow_http_outgoing,3);
+	add_rule(&rule_allow_http_outgoing);
 	
 
 	printk(KERN_INFO "Allowing HTTPS INPUT\n");
@@ -434,31 +402,29 @@ void drop_all_packets(void){
 	strcpy(rule_allow_https_incoming.src_ip, "10.0.2.15");
 	rule_allow_https_incoming.src_netmask = (char *)kmalloc(16,GFP_KERNEL);
 	strcpy(rule_allow_https_incoming.src_netmask, "255.255.255.255");
-	rule_allow_https_incoming.source_port = 0;
+	rule_allow_https_incoming.source_port = NULL;
 	rule_allow_https_incoming.dest_ip = NULL;
 	rule_allow_https_incoming.dest_netmask = NULL;
-        //rule_allow_https_incoming.destination_port = (char *)kmalloc(16,GFP_KERNEL);
-	//strcpy(rule_allow_https_incoming.destination_port, "443");
-	rule_allow_https_incoming.destination_port = 443;
+        rule_allow_https_incoming.destination_port = (char *)kmalloc(16,GFP_KERNEL);
+	strcpy(rule_allow_https_incoming.destination_port, "443");
 	rule_allow_https_incoming.proto = 1;
 	rule_allow_https_incoming.action = 1;
-	add_rule(&rule_allow_https_incoming,4);
+	add_rule(&rule_allow_https_incoming);
 
 	printk(KERN_INFO "Allowing HTTPS OUTPUT\n");
-	rule_allow_https_outgoing.in_out = 2;
+	rule_allow_https_outgoing.in_out = 1;
 	rule_allow_https_outgoing.src_ip = (char *)kmalloc(16, GFP_KERNEL);
 	strcpy(rule_allow_https_outgoing.src_ip, "10.0.2.15");
 	rule_allow_https_outgoing.src_netmask = (char *)kmalloc(16,GFP_KERNEL);
 	strcpy(rule_allow_https_outgoing.src_netmask, "255.255.255.255");
-	//rule_allow_https_outgoing.source_port = (char *)kmalloc(16,GFP_KERNEL);
-	//strcpy(rule_allow_https_outgoing.source_port, "443");
-	rule_allow_https_outgoing.source_port = 0;
+	rule_allow_https_outgoing.source_port = (char *)kmalloc(16,GFP_KERNEL);
+	strcpy(rule_allow_https_outgoing.source_port, "443");
 	rule_allow_https_outgoing.dest_ip = NULL;
 	rule_allow_https_outgoing.dest_netmask = NULL;
-	rule_allow_https_outgoing.destination_port = 443;
+	rule_allow_https_outgoing.destination_port = NULL;
 	rule_allow_https_outgoing.proto = 1;
 	rule_allow_https_outgoing.action = 1;
-	add_rule(&rule_allow_https_outgoing,5);
+	add_rule(&rule_allow_https_outgoing);
 
 	printk(KERN_INFO "Allowing DNS INPUT\n");
 	rule_allow_dns_in.in_out = 1;
@@ -466,84 +432,49 @@ void drop_all_packets(void){
 	strcpy(rule_allow_dns_in.src_ip, "10.0.2.15");
 	rule_allow_dns_in.src_netmask = (char *)kmalloc(16,GFP_KERNEL);
 	strcpy(rule_allow_dns_in.src_netmask, "255.255.255.255");
-	rule_allow_dns_in.source_port = 0;
+	rule_allow_dns_in.source_port = NULL;
 	rule_allow_dns_in.dest_ip = NULL;
 	rule_allow_dns_in.dest_netmask = NULL;
-        //rule_allow_dns_in.destination_port = (char *)kmalloc(16,GFP_KERNEL);
-	//strcpy(rule_allow_dns_in.destination_port, "53");
-	rule_allow_dns_in.destination_port = 53;
+        rule_allow_dns_in.destination_port = (char *)kmalloc(16,GFP_KERNEL);
+	strcpy(rule_allow_dns_in.destination_port, "53");
 	rule_allow_dns_in.proto = 1;
 	rule_allow_dns_in.action = 1;
-	add_rule(&rule_allow_dns_in,6);
+	add_rule(&rule_allow_dns_in);
 
 	printk(KERN_INFO "Allowing DNS OUTPUT\n");
-	rule_allow_dns_out.in_out = 2;
+	rule_allow_dns_out.in_out = 1;
 	rule_allow_dns_out.src_ip = (char *)kmalloc(16, GFP_KERNEL);
 	strcpy(rule_allow_dns_out.src_ip, "10.0.2.15");
 	rule_allow_dns_out.src_netmask = (char *)kmalloc(16,GFP_KERNEL);
 	strcpy(rule_allow_dns_out.src_netmask, "255.255.255.255");
-	//rule_allow_dns_out.source_port = (char *)kmalloc(16,GFP_KERNEL);
-	//strcpy(rule_allow_dns_out.source_port, "53");
-	rule_allow_dns_out.source_port = 0;
+	rule_allow_dns_out.source_port = (char *)kmalloc(16,GFP_KERNEL);
+	strcpy(rule_allow_dns_out.source_port, "53");
 	rule_allow_dns_out.dest_ip = NULL;
 	rule_allow_dns_out.dest_netmask = NULL;
-	rule_allow_dns_out.destination_port = 53;
+	rule_allow_dns_out.destination_port = NULL;
 	rule_allow_dns_out.proto = 1;
 	rule_allow_dns_out.action = 1;
-	add_rule(&rule_allow_dns_out,7);
-
-	printk(KERN_INFO "Allowing IPC INPUT\n");
-	rule_allow_ipc_in.in_out = 1;
-	rule_allow_ipc_in.src_ip = (char *)kmalloc(16, GFP_KERNEL);
-	strcpy(rule_allow_ipc_in.src_ip, "10.0.2.15");
-	rule_allow_ipc_in.src_netmask = (char *)kmalloc(16,GFP_KERNEL);
-	strcpy(rule_allow_ipc_in.src_netmask, "255.255.255.255");
-	rule_allow_ipc_in.source_port = 0;
-	rule_allow_ipc_in.dest_ip = NULL;
-	rule_allow_ipc_in.dest_netmask = NULL;
-        //rule_allow_dns_in.destination_port = (char *)kmalloc(16,GFP_KERNEL);
-	//strcpy(rule_allow_dns_in.destination_port, "53");
-	rule_allow_ipc_in.destination_port = 768;
-	rule_allow_ipc_in.proto = 1;
-	rule_allow_ipc_in.action = 1;
-	add_rule(&rule_allow_ipc_in,8);
-
-	printk(KERN_INFO "Allowing IPC OUTPUT\n");
-	rule_allow_ipc_out.in_out = 2;
-	rule_allow_ipc_out.src_ip = (char *)kmalloc(16, GFP_KERNEL);
-	strcpy(rule_allow_ipc_out.src_ip, "10.0.2.15");
-	rule_allow_ipc_out.src_netmask = (char *)kmalloc(16,GFP_KERNEL);
-	strcpy(rule_allow_ipc_out.src_netmask, "255.255.255.255");
-	//rule_allow_dns_out.source_port = (char *)kmalloc(16,GFP_KERNEL);
-	//strcpy(rule_allow_dns_out.source_port, "53");
-	rule_allow_ipc_out.source_port = 0;
-	rule_allow_ipc_out.dest_ip = NULL;
-	rule_allow_ipc_out.dest_netmask = NULL;
-	rule_allow_ipc_out.destination_port = 768;
-	rule_allow_ipc_out.proto = 1;
-	rule_allow_ipc_out.action = 1;
-	add_rule(&rule_allow_ipc_out,9);
+	add_rule(&rule_allow_dns_out);
+	
 }
 
 //Called when module loaded using 'insmod'
 int init_module()
 {
 	INIT_LIST_HEAD(&(policy_list.list));
-	drop_all_packets();	
 	nfho_in.hook = hook_func_in;		//function to call when conditions below met
 	nfho_in.hooknum = NF_INET_PRE_ROUTING;	
 	//nfho_in.hooknum = NF_INET_LOCAL_IN;	//called right after packet recieved, first hook in Netfilter
 	nfho_in.pf = PF_INET;			//IPV4 packets
 	nfho_in.priority = NF_IP_PRI_FIRST;	//set to highest priority over all other hook functions
 	nf_register_hook(&nfho_in);		// Register the hook
-	
 	nfho_out.hook = hook_func_out;
 	nfho_out.hooknum = NF_INET_POST_ROUTING;
 	//nfho_out.hooknum = NF_INET_LOCAL_OUT;
 	nfho_out.pf = PF_INET;
 	nfho_out.priority = NF_IP_PRI_FIRST;
 	nf_register_hook(&nfho_out);
-	
+	drop_all_packets();
  	return 0;
 }
 
