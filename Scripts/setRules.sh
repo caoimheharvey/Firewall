@@ -16,11 +16,11 @@ iptables -A OUTPUT -p tcp --sport 22 -m conntrack --ctstate ESTABLISHED -j ACCEP
 
 echo Setting HTTP/S INPUT..
 #Allow NEW,ESTABLISHED,RELATED http and https output connections
-iptables -A INPUT -p tcp -m multiport --dports 80,433 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+iptables -A INPUT -p tcp -m multiport --dports 80,433,8080 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
 
 echo Setting HTTP/S OUTPUT..
 #Allow ESTABLISHED,RELATED http and https input connections
-iptables -A OUTPUT -p tcp -m multiport --dports 80,433 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+iptables -A OUTPUT -p tcp -m multiport --dports 80,433,8080 -m conntrack --ctstate ESTABLISHED -j ACCEPT
 
 #blocking yahoo
 iptables -A OUTPUT -p tcp -d 209.191.88.254 --dport 443 -j ACCEPT
