@@ -23,7 +23,7 @@ echo Setting HTTP/S OUTPUT..
 iptables -A OUTPUT -p tcp -m multiport --dports 80,433 -m conntrack --ctstate ESTABLISHED -j ACCEPT
 
 #blocking yahoo
-iptables -A OUTPUT -p tcp -d 209.191.88.254 --dport 443 -j REJECT
+iptables -A OUTPUT -p tcp -d 209.191.88.254 --dport 443 -j ACCEPT
 
 echo Setting UDP/TCP OUTPUT..
 #Allow NEW udp/tcp output connections
